@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block title %}Results — FBA Explorer{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/datatables.net-bs5@1.13.11/css/dataTables.bootstrap5.min.css">
+{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    <h3 class="mb-0">Step 3 — Predicted fluxes for <span class="text-primary">{{ model_id }}</span></h3>
+    <p class="text-muted mb-0">
+      Solver status: <span class="badge bg-{{ 'success' if status == 'optimal' else 'danger' }}">{{ status }}</span>
+      · Objective value: <strong>{{ "%.6g"|format(objective_value) if objective_value is not none else 'n/a' }}</strong>
+    </p>
+  </div>
+  <div class="d-flex gap-2">
+    <a class="btn btn-outline-secondary" href="{{ url_for('download_fluxes') }}">Download CSV</a>
+    <a class="btn btn-primary" href="{{ url_for('visualize') }}" target="_blank">Visualise pathways ↗</a>
+  </div>
+</div>
+
+<div class="card mb-3">
+  <div class="card-body">
+    <h6 class="card-title">Save this run</h6>
+    <p class="text-muted small">
+      Saves a self-contained snapshot — every reaction's bounds, the objective,
+      gene knockouts, and the resulting fluxes — so you can compare it against
+      other runs later, even after editing or replacing the model.
+    </p>
+    <div class="row g-2">
+      <div class="col-md-4">
+        <input id="runName" type="text" class="form-control" placeholder="Run name (optional)">
+      </div>
+      <div class="col-md-6">
+        <input id="runNotes" type="text" class="form-control" placeholder="Notes (optional) — e.g. constraints changed">
+      </div>
+      <div class="col-md-2">
+        <button id="saveRunBtn" class="btn btn-success w-100">Save run</button>
+      </div>
+    </div>
+    <div id="saveRunMsg" class="small mt-2"></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <table id="fluxTable" class="table table-striped table-sm w-100">
+      <thead>
+        <tr>
+          <th>ID</th><th>Name</th><th>Subsystem</th><th>Flux</th>
+          <th>Lower bound</th><th>Upper bound</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/datatables.net@1.13.11/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/datatables.net-bs5@1.13.11/js/dataTables.bootstrap5.min.js"></script>
+<script>
+fetch("/api/reactions").then(r => r.json()).then(data => {
+  const tbody = document.querySelector("#fluxTable tbody");
+  for (const rxn of data) {
+    const flux = rxn.flux === null ? "" : rxn.flux;
+    const fluxDisplay = rxn.flux === null ? "n/a" : Number(rxn.flux).toPrecision(4);
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${rxn.id}</td>
+      <td>${rxn.name}</td>
+      <td>${rxn.subsystem}</td>
+      <td data-order="${flux}">${fluxDisplay}</td>
+      <td>${rxn.lower_bound}</td>
+      <td>${rxn.upper_bound}</td>
+    `;
+    tbody.appendChild(tr);
+  }
+  $("#fluxTable").DataTable({
+    pageLength: 20,
+    order: [[3, "desc"]],
+  });
+});
+
+document.getElementById("saveRunBtn").addEventListener("click", () => {
+  const msg = document.getElementById("saveRunMsg");
+  const btn = document.getElementById("saveRunBtn");
+  btn.disabled = true;
+  msg.textContent = "Saving...";
+  fetch("/api/save_run", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      name: document.getElementById("runName").value,
+      notes: document.getElementById("runNotes").value,
+    }),
+  })
+    .then(r => r.json())
+    .then(res => {
+      if (res.error) {
+        msg.innerHTML = `<span class="text-danger">${res.error}</span>`;
+      } else {
+        msg.innerHTML = `<span class="text-success">Saved. <a href="/runs">View saved runs →</a></span>`;
+        document.getElementById("runName").value = "";
+        document.getElementById("runNotes").value = "";
+      }
+    })
+    .catch(err => {
+      msg.innerHTML = `<span class="text-danger">Error: ${err}</span>`;
+    })
+    .finally(() => {
+      btn.disabled = false;
+    });
+});
+</script>
+{% endblock %}

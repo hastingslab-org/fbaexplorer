@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block title %}Edit model — FBA Explorer{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/datatables.net-bs5@1.13.11/css/dataTables.bootstrap5.min.css">
+{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    <h3 class="mb-0">Step 2 — Review &amp; edit <span class="text-primary">{{ model_id }}</span></h3>
+    <p class="text-muted mb-0">
+      {{ n_reactions }} reactions · {{ n_metabolites }} metabolites · {{ n_genes }} genes
+    </p>
+  </div>
+</div>
+
+<div class="row g-3 mb-3">
+  <div class="col-md-6">
+    <div class="card h-100">
+      <div class="card-body">
+        <h6 class="card-title">Objective</h6>
+        <div class="input-group">
+          <select id="objectiveSelect" class="form-select"></select>
+          <select id="objectiveDirection" class="form-select" style="max-width:110px;">
+            <option value="max" selected>maximise</option>
+            <option value="min">minimise</option>
+          </select>
+        </div>
+        <div class="form-text">Current: {{ objective_ids | join(', ') if objective_ids else '(none set)' }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card h-100">
+      <div class="card-body">
+        <h6 class="card-title">Gene knockouts (optional)</h6>
+        <textarea id="geneKnockouts" class="form-control" rows="2"
+                  placeholder="Comma or whitespace separated gene IDs, e.g. b0008, b0114"></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card mb-3">
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-center">
+      <h6 class="card-title mb-0">Add a new reaction</h6>
+      <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#addReactionForm">
+        + Add reaction
+      </button>
+    </div>
+    <div class="collapse mt-3" id="addReactionForm">
+      <div class="row g-2">
+        <div class="col-md-3">
+          <label class="form-label small">Reaction ID *</label>
+          <input id="newRxnId" type="text" class="form-control form-control-sm" placeholder="e.g. NEWRXN1">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label small">Name</label>
+          <input id="newRxnName" type="text" class="form-control form-control-sm" placeholder="Descriptive name">
+        </div>
+        <div class="col-md-5">
+          <label class="form-label small">Subsystem</label>
+          <input id="newRxnSubsystem" type="text" class="form-control form-control-sm" placeholder="e.g. Glycolysis">
+        </div>
+        <div class="col-12">
+          <label class="form-label small">Reaction formula *</label>
+          <input id="newRxnFormula" type="text" class="form-control form-control-sm font-monospace"
+                 placeholder="e.g. atp_c + h2o_c --> adp_c + h_c + pi_c   (use <=> for reversible)">
+          <div class="form-text">
+            Use existing metabolite IDs from the model wherever possible. Any ID not already
+            in the model is treated as new — describe it below to give it a proper name,
+            formula, and compartment (otherwise it's created bare, with the ID as its name).
+          </div>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label small">Lower bound</label>
+          <input id="newRxnLB" type="number" step="any" class="form-control form-control-sm" value="0">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label small">Upper bound</label>
+          <input id="newRxnUB" type="number" step="any" class="form-control form-control-sm" value="1000">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label small">GPR (optional)</label>
+          <input id="newRxnGPR" type="text" class="form-control form-control-sm" placeholder="e.g. gene1 and gene2">
+        </div>
+        <div class="col-12">
+          <label class="form-label small">New metabolites (optional — one per line)</label>
+          <textarea id="newRxnMetabolites" class="form-control form-control-sm font-monospace" rows="2"
+                    placeholder="id | name | formula | compartment | charge   (only id is required, e.g. novel_c | Novel compound | C6H12O6 | c | 0)"></textarea>
+        </div>
+        <div class="col-12">
+          <button id="addRxnBtn" class="btn btn-sm btn-primary">Add reaction to model</button>
+          <span id="addRxnMsg" class="small ms-2"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card mb-3">
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <h6 class="card-title mb-0">Reaction bounds</h6>
+      <div class="text-muted small">
+        Edit lower/upper flux bounds directly in the table (mmol/gDW/h). Use the search
+        box to filter, e.g. type <code>EX_</code> to find exchange (medium) reactions.
+        To remove a reaction's effect without deleting it, set both bounds to 0.
+      </div>
+    </div>
+    <table id="rxnTable" class="table table-striped table-sm w-100">
+      <thead>
+        <tr>
+          <th>ID</th><th>Name</th><th>Subsystem</th>
+          <th>Lower bound</th><th>Upper bound</th><th>Reaction</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="d-flex gap-2 mb-5">
+  <button id="applyBtn" class="btn btn-outline-primary">Apply edits</button>
+  <button id="runBtn" class="btn btn-success">Run FBA →</button>
+  <span id="statusMsg" class="align-self-center text-muted"></span>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/datatables.net@1.13.11/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/datatables.net-bs5@1.13.11/js/dataTables.bootstrap5.min.js"></script>
+<script src="{{ url_for('static', filename='edit.js') }}"></script>
+{% endblock %}

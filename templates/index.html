@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Upload model — FBA Explorer{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-7">
+    <div class="card shadow-sm">
+      <div class="card-body p-4">
+        <h3 class="card-title mb-3">Step 1 — Choose a genome-scale model</h3>
+
+        <h5>Default model: {{ default_model_name }}</h5>
+        {% if default_model_available %}
+          <p class="text-muted">
+            Load the bundled <em>Drosophila melanogaster</em> {{ default_model_name }}
+            model (<a href="{{ default_model_source_url }}" target="_blank">source</a>) to start immediately.
+          </p>
+          <form action="{{ url_for('upload') }}" method="post" class="mb-4">
+            <input type="hidden" name="use_example" value="flysilico">
+            <button type="submit" class="btn btn-primary">Load {{ default_model_name }}</button>
+          </form>
+        {% else %}
+          <div class="alert alert-warning">
+            The bundled {{ default_model_name }} model isn't present in this deployment yet.
+            Download it from
+            <a href="{{ default_model_source_url }}" target="_blank">{{ default_model_source_url }}</a>
+            and either:
+            <ul class="mb-0 mt-2">
+              <li>save it as <code>data/FlySilico_v1_sbml.xls</code> next to <code>app.py</code>
+                  so it becomes the one-click default, or</li>
+              <li>just upload it directly using the form below — same result either way.</li>
+            </ul>
+          </div>
+        {% endif %}
+
+        <hr class="my-4">
+
+        <h5>Upload your own model</h5>
+        <p class="text-muted">
+          SBML (<code>.xml</code>/<code>.sbml</code>), COBRA JSON (<code>.json</code>),
+          YAML, MATLAB (<code>.mat</code>), or Excel (<code>.xls</code>/<code>.xlsx</code>) format.
+        </p>
+        <form action="{{ url_for('upload') }}" method="post" enctype="multipart/form-data">
+          <div class="mb-3">
+            <input class="form-control" type="file" name="model_file"
+                   accept=".xml,.sbml,.json,.yaml,.yml,.mat,.xls,.xlsx">
+          </div>
+          <button type="submit" class="btn btn-outline-primary">Upload &amp; continue</button>
+        </form>
+
+        <hr class="my-4">
+
+        <h5>Quick test model</h5>
+        <p class="text-muted">Load the small bundled <em>E. coli</em> textbook model (95 reactions) — useful for quickly trying out the app's features.</p>
+        <form action="{{ url_for('upload') }}" method="post">
+          <input type="hidden" name="use_example" value="textbook">
+          <button type="submit" class="btn btn-outline-secondary btn-sm">Load E. coli textbook model</button>
+        </form>
+      </div>
+    </div>
+    <p class="text-muted small mt-3">
+      Tip: genome-scale models with <em>subsystem</em> or SBML <em>group</em> annotations
+      give the best pathway visualisations in step 4, since pathways are grouped by subsystem.
+    </p>
+    <p class="text-muted small">
+      Excel uploads should follow the common "COBRA Toolbox" layout: a
+      <strong>Reaction List</strong> sheet with columns like Abbreviation,
+      Description, Reaction, GPR, Lower bound, Upper bound, Objective, Subsystem,
+      and optionally a <strong>Metabolite List</strong> sheet with Abbreviation,
+      Description, Neutral formula, Charge, Compartment.
+    </p>
+  </div>
+</div>
+{% endblock %}

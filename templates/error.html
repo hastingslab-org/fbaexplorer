@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Error — FBA Explorer{% endblock %}
+{% block content %}
+<div class="alert alert-danger">
+  <h5>Something went wrong</h5>
+  <p>{{ error }}</p>
+  <details class="small text-muted"><summary>Traceback</summary><pre>{{ trace }}</pre></details>
+  <a href="{{ url_for('index') }}" class="btn btn-outline-danger btn-sm mt-2">Back to start</a>
+</div>
+{% endblock %}

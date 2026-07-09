@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Saved runs — FBA Explorer{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/datatables.net-bs5@1.13.11/css/dataTables.bootstrap5.min.css">
+{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    <h3 class="mb-0">Saved runs</h3>
+    <p class="text-muted mb-0">Select two or more runs to compare their fluxes and constraints side by side.</p>
+  </div>
+  <div class="d-flex gap-2">
+    <button id="compareBtn" class="btn btn-primary" disabled>Compare selected</button>
+    <button id="exportBtn" class="btn btn-outline-secondary" disabled>Export selected (CSV)</button>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <table id="runsTable" class="table table-striped table-sm w-100">
+      <thead>
+        <tr>
+          <th></th>
+          <th>Name</th>
+          <th>Model</th>
+          <th>Source</th>
+          <th>Objective</th>
+          <th>Value</th>
+          <th>Status</th>
+          <th>Knockouts</th>
+          <th>Created</th>
+          <th>Notes</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/datatables.net@1.13.11/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/datatables.net-bs5@1.13.11/js/dataTables.bootstrap5.min.js"></script>
+<script src="{{ url_for('static', filename='runs.js') }}"></script>
+{% endblock %}

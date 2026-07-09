@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Pathway visualisation — FBA Explorer{% endblock %}
+{% block head %}
+<style>
+  #network { width: 100%; height: 72vh; border: 1px solid #dee2e6; border-radius: .375rem; background: #fff; }
+  .legend-swatch { display:inline-block; width:14px; height:14px; border-radius:3px; margin-right:6px; vertical-align:middle; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+  <div>
+    <h3 class="mb-0">Step 4 — Pathway map for <span class="text-primary">{{ model_id }}</span></h3>
+    <p class="text-muted mb-0">Select a subsystem/pathway to render its reaction–metabolite network, coloured by predicted flux.</p>
+  </div>
+  <div class="d-flex align-items-center gap-2">
+    <label class="mb-0 small text-muted">Pathway:</label>
+    <select id="subsystemSelect" class="form-select" style="min-width:280px;"></select>
+    <button id="refreshBtn" class="btn btn-outline-primary" title="Reload flux values for the current pathway without resetting zoom/pan">
+      ⟳ Refresh
+    </button>
+  </div>
+</div>
+
+{% if not has_solution %}
+<div class="alert alert-info">No FBA solution yet — the network will render in grey. Run FBA in step 2/3, then click <strong>Refresh</strong> here to see flux-coloured pathways.</div>
+{% else %}
+<div class="alert alert-info">If you re-run FBA with new constraints in another tab, click <strong>Refresh</strong> to pull in the new flux values — your current zoom and pan are preserved.</div>
+{% endif %}
+
+<div class="row g-3">
+  <div class="col-lg-10">
+    <div id="network"></div>
+  </div>
+  <div class="col-lg-2">
+    <div class="card">
+      <div class="card-body">
+        <h6 class="card-title">Legend</h6>
+        <div class="mb-2"><span class="legend-swatch" style="background:#d8f3dc; border:1px solid #264653;"></span>Reaction, forward flux</div>
+        <div class="mb-2"><span class="legend-swatch" style="background:#ffe5d9; border:1px solid #264653;"></span>Reaction, reverse flux</div>
+        <div class="mb-2"><span class="legend-swatch" style="background:#f1f3f5; border:1px solid #264653;"></span>Reaction, zero flux</div>
+        <div class="mb-2"><span class="legend-swatch" style="background:#e8f6f3; border-radius:50%; border:1px solid #2a9d8f;"></span>Metabolite</div>
+        <hr>
+        <div class="mb-2"><span class="legend-swatch" style="background:#4c956c;"></span>Edge carries flux</div>
+        <div class="mb-2"><span class="legend-swatch" style="background:#adb5bd;"></span>Edge inactive</div>
+        <hr>
+        <div class="small text-muted">Edge thickness &amp; reaction border weight scale with |flux|. Arrows show net direction. Hover any node for details. Click <strong>Refresh</strong> to pull in new flux values without losing your zoom/pan.</div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/vis-network@9.1.9/standalone/umd/vis-network.min.js"></script>
+<script src="{{ url_for('static', filename='visualize.js') }}"></script>
+{% endblock %}
