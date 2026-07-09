@@ -1,7 +1,7 @@
 # FBA Explorer
 
 A small Flask web app for running and visualising Flux Balance Analysis (FBA)
-on genome-scale metabolic models using [COBRApy](https://cobrapy.readthedocs.io/).
+on genome-scale metabolic models using [COBRApy](https://cobrapy.readthedocs.io/). Initial version "vibe coded" with Claude. 
 
 ## Workflow
 
