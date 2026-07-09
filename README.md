@@ -44,20 +44,6 @@ a curated genome-scale metabolic model of *Drosophila melanogaster* larval
 metabolism (Schönborn et al. 2019, *Scientific Reports*), distributed as an
 Excel spreadsheet.
 
-**This repo does not bundle the FlySilico file itself** — it isn't hosted
-anywhere this app's build environment can reach automatically. To enable the
-one-click default:
-
-1. Download `FlySilico_v1_sbml.xls` from
-   <https://gitlab.com/Beller-Lab/flysilico/-/blob/master/FlySilico_v1_sbml.xls>
-2. Save it as `data/FlySilico_v1_sbml.xls` (next to `app.py`).
-3. Restart the app — the homepage will now show a **Load FlySilico** button.
-
-Until then, the homepage explains this and lets you upload the file manually
-via the regular upload form (identical result, just one extra click each
-time). A small bundled *E. coli* textbook model remains available as a
-"quick test" option regardless.
-
 ## Saved runs & comparison
 
 The **Saved runs** page (and the **Save run** button on the results page)
