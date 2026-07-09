@@ -75,12 +75,12 @@ pip install -r requirements.txt
 python app.py
 ```
 
-Then open http://localhost:5000 in your browser.
+Then open http://localhost:5012 in your browser.
 
 For a slightly more production-like run:
 
 ```bash
-gunicorn -w 1 -b 0.0.0.0:5000 app:app
+gunicorn -w 1 -b 0.0.0.0:5012 app:app
 ```
 
 **Important:** this app keeps uploaded models and FBA solutions in an
