@@ -42,11 +42,22 @@ function loadReactions() {
 
 function collectEdits() {
   const edits = [];
-  document.querySelectorAll("#rxnTable tbody tr").forEach(tr => {
-    const id = tr.dataset.id;
-    const lb = tr.querySelector(".lb-input").value;
-    const ub = tr.querySelector(".ub-input").value;
-    edits.push({ id, lower_bound: lb, upper_bound: ub });
+  // DataTables keeps rows for other pages (and for rows filtered out by the
+  // search box) detached from the document, so querying the DOM directly only
+  // ever sees the visible page. Go through the DataTables API instead —
+  // otherwise edits made on any other page are silently dropped on Apply.
+  const rows = dataTable
+    ? dataTable.rows().nodes().toArray()
+    : Array.from(document.querySelectorAll("#rxnTable tbody tr"));
+  rows.forEach(tr => {
+    const lbInput = tr.querySelector(".lb-input");
+    const ubInput = tr.querySelector(".ub-input");
+    if (!lbInput || !ubInput) return;
+    edits.push({
+      id: tr.dataset.id,
+      lower_bound: lbInput.value,
+      upper_bound: ubInput.value,
+    });
   });
   return edits;
 }
