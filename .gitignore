@@ -1,0 +1,18 @@
+# Python virtual environment
+venv/
+.venv/
+
+# Byte-compiled files
+__pycache__/
+*.py[cod]
+
+# Runtime directories created by app.py
+# uploads/ holds transient model files; data/ holds the local runs.db and the
+# FlySilico spreadsheet, which README.md tells users to download themselves.
+uploads/
+data/
+
+# Editor / OS cruft
+.vscode/
+.idea/
+.DS_Store
