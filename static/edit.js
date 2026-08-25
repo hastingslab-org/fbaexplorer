@@ -42,10 +42,6 @@ function loadReactions() {
 
 function collectEdits() {
   const edits = [];
-  // DataTables keeps rows for other pages (and for rows filtered out by the
-  // search box) detached from the document, so querying the DOM directly only
-  // ever sees the visible page. Go through the DataTables API instead —
-  // otherwise edits made on any other page are silently dropped on Apply.
   const rows = dataTable
     ? dataTable.rows().nodes().toArray()
     : Array.from(document.querySelectorAll("#rxnTable tbody tr"));
