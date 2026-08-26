@@ -42,11 +42,18 @@ function loadReactions() {
 
 function collectEdits() {
   const edits = [];
-  document.querySelectorAll("#rxnTable tbody tr").forEach(tr => {
-    const id = tr.dataset.id;
-    const lb = tr.querySelector(".lb-input").value;
-    const ub = tr.querySelector(".ub-input").value;
-    edits.push({ id, lower_bound: lb, upper_bound: ub });
+  const rows = dataTable
+    ? dataTable.rows().nodes().toArray()
+    : Array.from(document.querySelectorAll("#rxnTable tbody tr"));
+  rows.forEach(tr => {
+    const lbInput = tr.querySelector(".lb-input");
+    const ubInput = tr.querySelector(".ub-input");
+    if (!lbInput || !ubInput) return;
+    edits.push({
+      id: tr.dataset.id,
+      lower_bound: lbInput.value,
+      upper_bound: ubInput.value,
+    });
   });
   return edits;
 }
