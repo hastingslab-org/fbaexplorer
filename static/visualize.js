@@ -1,31 +1,64 @@
 let network = null;
 let nodesDataSet = null;
 let edgesDataSet = null;
-let currentSubsystem = null;
+let currentSubsystems = [];
 
 const FORWARD_COLOR = "#4c956c";
 const ZERO_COLOR = "#adb5bd";
 const RXN_COLOR = "#264653";
 const MET_COLOR = "#2a9d8f";
+const LARGE_GRAPH_NODES = 400;
 
 function loadSubsystems() {
   fetch("/api/subsystems")
     .then(r => r.json())
     .then(list => {
-      const sel = document.getElementById("subsystemSelect");
-      sel.innerHTML = "";
-      for (const item of list) {
-        const opt = document.createElement("option");
-        opt.value = item.name;
-        opt.textContent = `${item.name} (${item.n_reactions})`;
-        sel.appendChild(opt);
-      }
-      if (list.length > 0) {
-        currentSubsystem = list[0].name;
-        sel.value = currentSubsystem;
-        renderPathway(currentSubsystem);
-      }
+      const listEl = document.getElementById("subsystemList");
+      listEl.innerHTML = "";
+      list.forEach((item, i) => {
+        const wrapper = document.createElement("div");
+        wrapper.className = "form-check";
+        const box = document.createElement("input");
+        box.type = "checkbox";
+        box.className = "form-check-input subsystem-check";
+        box.id = `subsystem-${i}`;
+        box.value = item.name;
+        box.checked = i === 0;
+        const label = document.createElement("label");
+        label.className = "form-check-label small";
+        label.htmlFor = box.id;
+        label.textContent = `${item.name} (${item.n_reactions})`;
+        wrapper.append(box, label);
+        listEl.appendChild(wrapper);
+      });
+      applySelection();
     });
+}
+
+function checkedSubsystems() {
+  return [...document.querySelectorAll(".subsystem-check:checked")].map(b => b.value);
+}
+
+function setAllChecked(checked) {
+  document.querySelectorAll(".subsystem-check").forEach(b => { b.checked = checked; });
+}
+
+function updateToggleLabel() {
+  const n = currentSubsystems.length;
+  document.getElementById("subsystemToggle").textContent =
+    n === 0 ? "No pathway selected" : n === 1 ? currentSubsystems[0] : `${n} pathways selected`;
+}
+
+function applySelection() {
+  currentSubsystems = checkedSubsystems();
+  updateToggleLabel();
+  renderPathway(currentSubsystems);
+}
+
+function pathwayUrl(subsystems) {
+  const params = new URLSearchParams();
+  subsystems.forEach(s => params.append("subsystem", s));
+  return `/api/pathway_data?${params}`;
 }
 
 function edgeColor(active) {
@@ -72,12 +105,12 @@ function toVisEdge(e) {
 }
 
 /**
- * Full (re)render: used when the user picks a different pathway. Creates a
+ * Full (re)render: used when the user picks different pathways. Creates a
  * fresh layout and fits the view, since node positions from the previous
- * pathway aren't meaningful here.
+ * selection aren't meaningful here.
  */
-function renderPathway(subsystem) {
-  fetch(`/api/pathway_data?subsystem=${encodeURIComponent(subsystem)}`)
+function renderPathway(subsystems) {
+  fetch(pathwayUrl(subsystems))
     .then(r => r.json())
     .then(data => {
       const nodes = data.nodes.map(toVisNode);
@@ -86,13 +119,15 @@ function renderPathway(subsystem) {
       nodesDataSet = new vis.DataSet(nodes);
       edgesDataSet = new vis.DataSet(edges);
 
+      // improvedLayout gets very slow on big graphs (e.g. "All" pathways)
+      const large = nodes.length > LARGE_GRAPH_NODES;
       const options = {
         physics: {
-          barnesHut: { gravitationalConstant: -8000, springLength: 120, springConstant: 0.03 },
-          stabilization: { iterations: 150 },
+          barnesHut: { gravitationalConstant: -3000, springLength: 70, springConstant: 0.03},
+          stabilization: { iterations: large ? 300 : 150 },
         },
         interaction: { hover: true, tooltipDelay: 100 },
-        layout: { improvedLayout: true },
+        layout: { improvedLayout: !large },
       };
 
       const container = document.getElementById("network");
@@ -105,18 +140,18 @@ function renderPathway(subsystem) {
 
 /**
  * Data-only refresh: re-fetches flux values for the currently displayed
- * pathway and updates node/edge colors and widths in place, without
+ * pathways and updates node/edge colors and widths in place, without
  * recreating the network — so the user's current zoom and pan are kept.
  */
 function refreshData() {
-  if (!currentSubsystem || !nodesDataSet || !edgesDataSet) {
+  if (!currentSubsystems.length || !nodesDataSet || !edgesDataSet) {
     return;
   }
   const btn = document.getElementById("refreshBtn");
   btn.disabled = true;
   btn.textContent = "Refreshing...";
 
-  fetch(`/api/pathway_data?subsystem=${encodeURIComponent(currentSubsystem)}`)
+  fetch(pathwayUrl(currentSubsystems))
     .then(r => r.json())
     .then(data => {
       const newNodeIds = new Set(data.nodes.map(n => n.id));
@@ -138,9 +173,11 @@ function refreshData() {
     });
 }
 
-document.getElementById("subsystemSelect").addEventListener("change", (e) => {
-  currentSubsystem = e.target.value;
-  renderPathway(currentSubsystem);
+document.getElementById("selectAllBtn").addEventListener("click", () => setAllChecked(true));
+document.getElementById("selectNoneBtn").addEventListener("click", () => setAllChecked(false));
+document.getElementById("showBtn").addEventListener("click", () => {
+  applySelection();
+  bootstrap.Dropdown.getOrCreateInstance(document.getElementById("subsystemToggle")).hide();
 });
 
 document.getElementById("refreshBtn").addEventListener("click", refreshData);

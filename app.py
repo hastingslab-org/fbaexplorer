@@ -697,11 +697,12 @@ def api_pathway_data():
     if model is None:
         return jsonify({"error": "no model loaded"}), 400
 
-    subsystem = request.args.get("subsystem", "")
+    # Repeated ?subsystem=A&subsystem=B params (names may contain commas)
+    wanted = set(request.args.getlist("subsystem"))
     solution = get_solution()
     fluxes = solution.fluxes if solution is not None else None
 
-    rxns = [r for r in model.reactions if reaction_subsystem(r) == subsystem]
+    rxns = [r for r in model.reactions if reaction_subsystem(r) in wanted]
     if not rxns:
         return jsonify({"nodes": [], "edges": [], "has_flux": fluxes is not None})
 
@@ -710,11 +711,13 @@ def api_pathway_data():
 
     for rxn in rxns:
         flux = float(fluxes[rxn.id]) if fluxes is not None and rxn.id in fluxes.index else 0.0
+        rxn_subsystem = reaction_subsystem(rxn)
         nodes[f"rxn:{rxn.id}"] = {
             "id": f"rxn:{rxn.id}",
             "label": rxn.id,
-            "title": f"{rxn.name}\nflux = {flux:.4g}\n{rxn.build_reaction_string()}",
+            "title": f"{rxn.name}\npathway: {rxn_subsystem}\nflux = {flux:.4g}\n{rxn.build_reaction_string()}",
             "type": "reaction",
+            "subsystem": rxn_subsystem,
             "flux": flux,
             "reversible": rxn.lower_bound < 0,
         }
