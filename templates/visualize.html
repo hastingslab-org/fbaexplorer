@@ -10,12 +10,23 @@
 <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
   <div>
     <h3 class="mb-0">Step 4 — Pathway map for <span class="text-primary">{{ model_id }}</span></h3>
-    <p class="text-muted mb-0">Select a subsystem/pathway to render its reaction–metabolite network, coloured by predicted flux.</p>
+    <p class="text-muted mb-0">Select one or more subsystems/pathways to render their reaction–metabolite network, coloured by predicted flux.</p>
   </div>
   <div class="d-flex align-items-center gap-2">
-    <label class="mb-0 small text-muted">Pathway:</label>
-    <select id="subsystemSelect" class="form-select" style="min-width:280px;"></select>
-    <button id="refreshBtn" class="btn btn-outline-primary" title="Reload flux values for the current pathway without resetting zoom/pan">
+    <label class="mb-0 small text-muted">Pathways:</label>
+    <div class="dropdown">
+      <button id="subsystemToggle" class="form-select text-start" style="min-width:280px;" type="button"
+              data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">Loading…</button>
+      <div class="dropdown-menu p-2" style="min-width:340px;">
+        <div class="d-flex gap-2 mb-2">
+          <button id="selectAllBtn" type="button" class="btn btn-sm btn-outline-secondary">All</button>
+          <button id="selectNoneBtn" type="button" class="btn btn-sm btn-outline-secondary">None</button>
+          <button id="showBtn" type="button" class="btn btn-sm btn-primary ms-auto">Show</button>
+        </div>
+        <div id="subsystemList" style="max-height:50vh; overflow-y:auto;"></div>
+      </div>
+    </div>
+    <button id="refreshBtn" class="btn btn-outline-primary" title="Reload flux values for the current pathways without resetting zoom/pan">
       ⟳ Refresh
     </button>
   </div>
