@@ -88,7 +88,7 @@ function renderPathway(subsystem) {
 
       const options = {
         physics: {
-          barnesHut: { gravitationalConstant: -8000, springLength: 120, springConstant: 0.03 },
+          barnesHut: { gravitationalConstant: -4000, springLength: 70, springConstant: 0.06},
           stabilization: { iterations: 150 },
         },
         interaction: { hover: true, tooltipDelay: 100 },
